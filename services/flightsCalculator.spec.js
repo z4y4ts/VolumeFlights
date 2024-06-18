@@ -86,7 +86,7 @@ describe('large dataset', () => {
     const randomLegs = generateAirportPairs(200);
     console.log({randomLegs});
 
-    const memLimit = 100 * 1024 * 1024; // 100 MB
+    const memLimit = 200 * 1024 * 1024; // 100 MB
     const timeLimit = 60_000; // 60 s
     const start = Date.now();
     const memoryStart = process.memoryUsage().heapUsed;

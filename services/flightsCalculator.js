@@ -5,8 +5,10 @@ const memoizer = require('lru-memoizer');
 function calculateFlight(legs) {
   let longestFlight
   const flightGraph = buildFlightGraph(legs)
-  const isComplexGraph = legs.length > 200  // Can be adjusted based on the performance after more research
-  if (isComplexGraph || flightGraph.getCycles(true).length === 0) {
+  const flightCycles = flightGraph.getCycles(true)
+  const isComplexGraph = legs.length > 200  || flightCycles.length > 100 // Can be adjusted based on the performance after more research
+  console.log('Cycles', flightCycles.length)
+  if (isComplexGraph || flightCycles.length === 0) {
     longestFlight = findFlightWithTopologicalSort(flightGraph)
   } else {
     longestFlight = findFlightInGraphWithCycles(flightGraph)
