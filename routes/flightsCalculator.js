@@ -5,14 +5,20 @@ const { calculateFlight } = require('../services/flightsCalculator');
 const { validateLegs } = require('../services/validationService');
 
 router.post('/', function (req, res, next) {
-  const legs = req.body;
   try {
-    validateLegs(legs);
+    validateLegs(req.body);
   } catch (e) {
-    res.status(400).send(e.message);
+    res.status(400).send({ error: e.message });
   }
-  const flight = calculateFlight(legs);
-  res.send(flight);
+  try {
+    const {legs} = req.body;
+    const flight = calculateFlight(legs);
+    res.send(flight);
+  } catch (error) {
+    console.log(error.message);
+    console.log(req.body);
+    res.status(500).send({ error: error.message });
+  }
 });
 
 module.exports = router;

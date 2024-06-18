@@ -10,7 +10,7 @@ function validateLegs(legs) {
       )
     ).min(1)
   });
-  const {error, value} = schema.validate(legs, {abortEarly: false});
+  const {error} = schema.validate(legs, {abortEarly: false});
   if (error) {
     // throw error();
     console.log(error.details)
