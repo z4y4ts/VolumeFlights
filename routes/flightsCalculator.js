@@ -1,9 +1,12 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+const { calculateFlight } = require('../services/flightsCalculator');
+
+router.post('/', function(req, res, next) {
+  const legs = req.body.legs;
+  const flight = calculateFlight(legs);
+  res.send(flight);
 });
 
 module.exports = router;
