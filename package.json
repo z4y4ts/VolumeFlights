@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "test": "jest"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
+    "data-structure-typed": "^1.52.0",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "itertools": "^2.3.2",

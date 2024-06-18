@@ -1,4 +1,5 @@
-const {permutations} = require('itertools');
+const { DirectedGraph } = require('data-structure-typed');
+
 const memoizer = require('lru-memoizer');
 
 /**
@@ -7,18 +8,50 @@ const memoizer = require('lru-memoizer');
  */
 function calculateFlight(legs) {
     let longestFlight = []
-    for (const perm of permutations(legs)) {
-        // console.debug({perm});
-        const flight = memoizedFindFlight(perm);
-        // console.debug({flight});
+    const sortedLegs = sortLegsTopologically(legs)
+    for (const rotation of rotateArray(sortedLegs)) {
+        console.debug({rotation});
+        const flight = memoizedFindFlight(rotation);
+        console.debug({flight});
         if (flight.length > longestFlight.length) {
             longestFlight = flight;
         }
     }
-    // console.debug({longestFlight});
+    console.debug({longestFlight});
     const start = longestFlight[0];
     const end = longestFlight[longestFlight.length - 1];
     return [start, end]
+}
+
+function rotateArray(array) {
+    const rotations = [];
+    for (let i = 0; i < array.length; i++) {
+        rotations.push(array.slice(i).concat(array.slice(0, i)));
+    }
+    return rotations;
+}
+
+function sortLegsTopologically(legs) {
+    const graph = new DirectedGraph();
+    for (const leg of legs) {
+        graph.addVertex(leg[0]);
+        graph.addVertex(leg[1]);
+        graph.addEdge(leg[0], leg[1]);
+    }
+
+    const topologicalOrderKeys = graph.topologicalSort()
+    console.log({topologicalOrderKeys})
+    if (!topologicalOrderKeys) {
+        return []
+    }
+    const edgeSet = graph.edgeSet()
+    const sortedEdges = topologicalOrderKeys.map(src => edgeSet.filter(edge => edge.src === src))
+    const sortedLegs = sortedEdges.filter(e => e.length).reduce((acc, edges) => {
+        const edge = edges[0]
+        return [...acc, [edge.src, edge.dest]]
+    }, [])
+    console.log({sortedLegs})
+    return sortedLegs
 }
 
 const memoizedFindFlight = memoizer.sync({
@@ -41,10 +74,10 @@ function findFlight(legs) {
     if (legs.length === 2) {
         const flightA = legs[0]
         const flightB = legs[1]
-        if (flightA[1] === flightB[0]) {
+        if (flightA[flightA.length - 1] === flightB[0]) {
             return [...flightA, ...flightB];
         }
-        if (flightA[0] === flightB[1]) {
+        if (flightA[0] === flightB[flightB.length - 1]) {
             return [...flightB, ...flightA];
         }
         return flightA;
@@ -61,3 +94,5 @@ function findFlight(legs) {
 }
 
 exports.calculateFlight = calculateFlight;
+exports.sortLegsTopologically = sortLegsTopologically;
+exports.rotateArray = rotateArray;

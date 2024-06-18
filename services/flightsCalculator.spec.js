@@ -1,7 +1,18 @@
 const { faker } = require('@faker-js/faker');
 const { pairwise } = require('itertools');
 
-const { calculateFlight } = require('./flightsCalculator.js')
+const { calculateFlight, rotateArray, sortLegsTopologically } = require('./flightsCalculator.js')
+
+describe('sortLegsTopologically', () => {
+    const testCases = [
+        {legs: [['SFO', 'EWR']], expected: [['SFO', 'EWR']]},
+        {legs: [['ATL', 'EWR'], ['SFO', 'ATL']], expected: [['SFO', 'ATL'], ['ATL', 'EWR']]},
+    ]
+    it.each(testCases)('Should sort legs topologically $legs', ({legs, expected}) => {
+        const result = sortLegsTopologically(legs);
+        expect(result).toEqual(expected);
+    })
+})
 
 describe('calculateFlight', () => {
   const testCases = [
@@ -65,10 +76,10 @@ describe('large dataset', () => {
         expect(result).toEqual(expected);
     })
 
-    it('should not exceed MEM & timelimit', () => {
+    it('should not exceed MEM & timelimit in random dataset. Worst case', () => {
         // Arrange
-        const legs = generateAirportPairs(10)
-        console.log({legs});
+        const randomLegs = generateAirportPairs(10_000)
+        console.log({randomLegs});
 
         const memLimit = 10 * 1024 * 1024; // 100MB
         const timeLimit = 60_000; // 1000ms
@@ -76,7 +87,7 @@ describe('large dataset', () => {
         const memoryStart = process.memoryUsage().heapUsed;
 
         // Act
-        const result = calculateFlight(legs);
+        const result = calculateFlight(randomLegs);
         expect(result).toBeDefined();
 
         const memoryEnd = process.memoryUsage().heapUsed;
@@ -88,5 +99,23 @@ describe('large dataset', () => {
         expect(memoryDiff).toBeLessThan(memLimit);
         console.log({start, end, timeDiff});
         expect(timeDiff).toBeLessThan(timeLimit);
+    })
+})
+
+describe('rotateArray', () => {
+    it('should rotate array', () => {
+        // Arrange
+        const array = ['a', 'b', 'c'];
+        const expected = [
+            ['a', 'b', 'c'],
+            ['b', 'c', 'a'],
+            ['c', 'a', 'b'],
+        ];
+
+        // Act
+        const result = rotateArray(array);
+
+        // Assert
+        expect(result).toEqual(expected);
     })
 })
