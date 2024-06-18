@@ -21,7 +21,7 @@ describe('validateLegs', () => {
       error: '"legs[0][0]" length must be 3 characters long, "legs[0][1]" length must be 3 characters long, "legs[1]" does not contain 1 required value(s)'
     },
   ];
-  test.each(invalidInputs)('Invalid inputs $legs', ({input, error}) => {
+  test.each(invalidInputs)('Invalid inputs $input', ({input, error}) => {
     expect(() => validateLegs(input)).toThrow(`Invalid input legs: ${error}`);
   })
 
