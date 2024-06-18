@@ -52,7 +52,7 @@ function shuffleArray(array) {
 }
 
 describe('large dataset', () => {
-  it.only('should find long flight in mixed dataset', () => {
+  it('should find long flight in mixed dataset', () => {
     // Arrange
     const legs = faker.helpers.uniqueArray(() => faker.airline.airport().iataCode, 150)
     const legPairs = pairwise(legs);
