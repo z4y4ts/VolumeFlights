@@ -18,6 +18,9 @@ function calculateFlight(legs) {
         }
     }
     console.debug({longestFlight});
+    if (longestFlight.length === 1) {
+        return longestFlight[0]
+    }
     const start = longestFlight[0];
     const end = longestFlight[longestFlight.length - 1];
     return [start, end]
