@@ -1,4 +1,6 @@
 const {permutations} = require('itertools');
+const memoizer = require('lru-memoizer');
+
 /**
  * @param {string[][]} legs Array of legs
  * @returns {[]|boolean} Returns the combined path or false if no path is possible
@@ -6,18 +8,28 @@ const {permutations} = require('itertools');
 function calculateFlight(legs) {
     let longestFlight = []
     for (const perm of permutations(legs)) {
-        console.log({perm});
-        const flight = findFlight(perm);
-        console.log({flight});
+        // console.debug({perm});
+        const flight = memoizedFindFlight(perm);
+        // console.debug({flight});
         if (flight.length > longestFlight.length) {
             longestFlight = flight;
         }
     }
-    console.log({longestFlight});
+    // console.debug({longestFlight});
     const start = longestFlight[0];
     const end = longestFlight[longestFlight.length - 1];
     return [start, end]
 }
+
+const memoizedFindFlight = memoizer.sync({
+  load: findFlight,
+  hash: function(legs) {
+    // Convert the legs array to a string to use as a cache key
+    return JSON.stringify(legs);
+  },
+  max: 500, // Maximum size of the cache
+  maxAge: 1000 * 60 * 60 // Items added to cache expire after 1 hour
+});
 
 function findFlight(legs) {
     if (legs.length === 0) {

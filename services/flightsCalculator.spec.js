@@ -1,3 +1,6 @@
+const { faker } = require('@faker-js/faker');
+const { pairwise } = require('itertools');
+
 const { calculateFlight } = require('./flightsCalculator.js')
 
 describe('calculateFlight', () => {
@@ -29,3 +32,61 @@ describe('calculateFlight', () => {
     expect(result).toEqual(expected);
   });
 });
+
+function generateAirportPairs(n) {
+    let pairs = [];
+    for (let i = 0; i < n; i++) {
+        pairs.push([faker.airline.airport().iataCode, faker.airline.airport().iataCode]);
+    }
+    return pairs;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+describe('large dataset', () => {
+    it('should find long flight in mixed dataset', () => {
+        // Arrange
+        const legs = Array.from(Array(10).keys()).map(() => faker.airline.airport().iataCode)
+        const legPairs = pairwise(legs);
+        const shuffledLegPairs = shuffleArray(legPairs);
+        const expected = [legs[0], legs[legs.length - 1]];
+        console.log({legs, expected, legPairs: JSON.stringify(legPairs), shuffledLegPairs: JSON.stringify(shuffledLegPairs)});
+
+        // Act
+        const result = calculateFlight(shuffledLegPairs);
+
+        // Assert
+        expect(result).toEqual(expected);
+    })
+
+    it('should not exceed MEM & timelimit', () => {
+        // Arrange
+        const legs = generateAirportPairs(10)
+        console.log({legs});
+
+        const memLimit = 10 * 1024 * 1024; // 100MB
+        const timeLimit = 60_000; // 1000ms
+        const start = Date.now();
+        const memoryStart = process.memoryUsage().heapUsed;
+
+        // Act
+        const result = calculateFlight(legs);
+        expect(result).toBeDefined();
+
+        const memoryEnd = process.memoryUsage().heapUsed;
+        const end = Date.now();
+        const memoryDiff = memoryEnd - memoryStart;
+        const timeDiff = end - start;
+
+        console.log({memoryDiff});
+        expect(memoryDiff).toBeLessThan(memLimit);
+        console.log({start, end, timeDiff});
+        expect(timeDiff).toBeLessThan(timeLimit);
+    })
+})
