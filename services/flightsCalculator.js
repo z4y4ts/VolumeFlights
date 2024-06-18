@@ -2,11 +2,46 @@ const { DirectedGraph } = require('data-structure-typed');
 
 const memoizer = require('lru-memoizer');
 
-/**
- * @param {string[][]} legs Array of legs
- * @returns {[]|boolean} Returns the combined path or false if no path is possible
- */
 function calculateFlight(legs) {
+  let longestFlight
+  const flightGraph = buildFlightGraph(legs)
+  const isComplexGraph = legs.length > 200  // Can be adjusted based on the performance after more research
+  if (isComplexGraph || flightGraph.getCycles(true).length === 0) {
+    longestFlight = findFlightWithTopologicalSort(flightGraph)
+  } else {
+    longestFlight = findFlightInGraphWithCycles(flightGraph)
+  }
+
+  // console.debug({longestFlight});
+  if (longestFlight.length === 1) {
+    return longestFlight[0]
+  }
+  const start = longestFlight[0];
+  const end = longestFlight[longestFlight.length - 1];
+  return [start, end]
+}
+
+function findFlightInGraphWithCycles(flightGraph) {
+  let longestFlight = []
+  // get all combinations of src and dest from the graph
+  const srcArray = new Set()
+  const dstArray = new Set()
+  flightGraph.edgeSet().forEach(edge => {
+    srcArray.add(edge.src);
+    dstArray.add(edge.dest)
+  })
+  const allSrcDstPairs = crossProduct([...srcArray], [...dstArray])
+  for (const [src, dst] of allSrcDstPairs) {
+    const flights = flightGraph.getAllPathsBetween(src, dst);
+    const flight = flights.reduce((acc, flight) => flight.length > acc.length ? flight : acc, [])
+    if (flight.length > longestFlight.length) {
+      longestFlight = flight;
+    }
+  }
+  return longestFlight.map(vertex => vertex.key)
+}
+
+function findFlightWithTopologicalSort(legs) {
   let longestFlight = []
   const sortedLegs = sortLegsTopologically(legs)
   for (const rotation of rotateArray(sortedLegs)) {
@@ -17,13 +52,7 @@ function calculateFlight(legs) {
       longestFlight = flight;
     }
   }
-  // console.debug({longestFlight});
-  if (longestFlight.length === 1) {
-    return longestFlight[0]
-  }
-  const start = longestFlight[0];
-  const end = longestFlight[longestFlight.length - 1];
-  return [start, end]
+  return longestFlight
 }
 
 function rotateArray(array) {
@@ -34,22 +63,29 @@ function rotateArray(array) {
   return rotations;
 }
 
-function sortLegsTopologically(legs) {
+function buildFlightGraph(legs) {
   const graph = new DirectedGraph();
   for (const leg of legs) {
     graph.addVertex(leg[0]);
     graph.addVertex(leg[1]);
     graph.addEdge(leg[0], leg[1]);
   }
+  return graph
+}
 
+function crossProduct(a, b) {
+  return a.reduce((acc, x) => [...acc, ...b.map(y => [x, y])], []);
+}
+
+function sortLegsTopologically(flightGraph) {
   // console.log(graph.edgeSet())
-  const topologicalOrderKeys = graph.topologicalSort()
+  const topologicalOrderKeys = flightGraph.topologicalSort()
   // console.log({topologicalOrderKeys})
   if (!topologicalOrderKeys) {
-    // There is a cycle in the graph. Fallback
-    return graph.edgeSet().map(edge => [edge.src, edge.dest])
+    // There is a cycle in the flightGraph. Fallback
+    return flightGraph.edgeSet().map(edge => [edge.src, edge.dest])
   }
-  const edgeSet = graph.edgeSet()
+  const edgeSet = flightGraph.edgeSet()
   const sortedEdges = topologicalOrderKeys.map(src => edgeSet.filter(edge => edge.src === src))
   const sortedLegs = sortedEdges.filter(e => e.length).reduce((acc, edges) => {
     const edge = edges[0]
@@ -98,6 +134,7 @@ function findFlight(legs) {
   return []
 }
 
+exports.buildFlightGraph = buildFlightGraph;
 exports.calculateFlight = calculateFlight;
 exports.sortLegsTopologically = sortLegsTopologically;
 exports.rotateArray = rotateArray;

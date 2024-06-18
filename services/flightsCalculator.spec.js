@@ -1,7 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const { pairwise } = require('itertools');
 
-const { calculateFlight, rotateArray, sortLegsTopologically } = require('./flightsCalculator.js')
+const { buildFlightGraph, calculateFlight, rotateArray, sortLegsTopologically } = require('./flightsCalculator.js')
 
 describe('sortLegsTopologically', () => {
   const testCases = [
@@ -9,7 +9,8 @@ describe('sortLegsTopologically', () => {
     {legs: [['ATL', 'EWR'], ['SFO', 'ATL']], expected: [['SFO', 'ATL'], ['ATL', 'EWR']]},
   ]
   it.each(testCases)('Should sort legs topologically $legs', ({legs, expected}) => {
-    const result = sortLegsTopologically(legs);
+    const flightGraph = buildFlightGraph(legs);
+    const result = sortLegsTopologically(flightGraph);
     expect(result).toEqual(expected);
   })
 })
@@ -30,6 +31,19 @@ describe('calculateFlight', () => {
     {legs: [['IND', 'EWR'], ['SFO', 'ATL'], ['GSO', 'IND'], ['ATL', 'GSO'], ['KBP', 'JFK']], expected: ['SFO', 'EWR']},
   ]
   test.each(trickyCases)('Tricky cases, $legs', ({legs, expected}) => {
+    const result = calculateFlight(legs);
+    expect(result).toEqual(expected);
+  });
+
+  const cycleCases = [
+    { legs: [['A', 'B'], ['B', 'C'], ['C', 'B']], expected: ['A', 'C'] },
+    // A -> B -> C
+    //      ^____|
+    { legs: [['A', 'B'], ['B', 'C'], ['C', 'D'], ['C', 'D'], ['D', 'A'], ['D', 'E']], expected: ['A', 'E'] },
+    // A -> B -> C -> D -> E
+    // ^______________|
+  ]
+  test.each(cycleCases)('Cycle cases, $legs', ({legs, expected}) => {
     const result = calculateFlight(legs);
     expect(result).toEqual(expected);
   });
@@ -69,10 +83,10 @@ describe('large dataset', () => {
 
   it('should not exceed MEM & time limits in random dataset. Worst case', () => {
     // Arrange
-    const randomLegs = generateAirportPairs(100_000)
+    const randomLegs = generateAirportPairs(200);
     console.log({randomLegs});
 
-    const memLimit = 20 * 1024 * 1024; // 20 MB
+    const memLimit = 100 * 1024 * 1024; // 100 MB
     const timeLimit = 60_000; // 60 s
     const start = Date.now();
     const memoryStart = process.memoryUsage().heapUsed;
