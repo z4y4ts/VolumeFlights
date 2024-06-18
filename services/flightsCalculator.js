@@ -1,36 +1,51 @@
+const {permutations} = require('itertools');
 /**
- * @param {string[][]} flightsArray Array of legs
+ * @param {string[][]} legs Array of legs
  * @returns {[]|boolean} Returns the combined path or false if no path is possible
  */
-export function calculateFlight(flightsArray) {
-    if (flightsArray.length === 0) {
+function calculateFlight(legs) {
+    let longestFlight = []
+    for (const perm of permutations(legs)) {
+        console.log({perm});
+        const flight = findFlight(perm);
+        console.log({flight});
+        if (flight.length > longestFlight.length) {
+            longestFlight = flight;
+        }
+    }
+    console.log({longestFlight});
+    const start = longestFlight[0];
+    const end = longestFlight[longestFlight.length - 1];
+    return [start, end]
+}
+
+function findFlight(legs) {
+    if (legs.length === 0) {
         return [];
     }
-    if (flightsArray.length === 1) {
-        return flightsArray[0];
+    if (legs.length === 1) {
+        return legs;
     }
-    if (flightsArray.length === 2) {
-        const flightA = flightsArray[0]
-        const flightB = flightsArray[1]
+    if (legs.length === 2) {
+        const flightA = legs[0]
+        const flightB = legs[1]
         if (flightA[1] === flightB[0]) {
-            return flightA + flightB;
+            return [...flightA, ...flightB];
         }
         if (flightA[0] === flightB[1]) {
-            return flightB + flightA;
+            return [...flightB, ...flightA];
         }
-        return false;
+        return flightA;
     }
-    if (flightsArray.length === 3) {
-        const flightA = flightsArray[0]
-        const flightB = flightsArray[1]
-        const flightC = flightsArray[2]
-
-        const [flight, lastLeg] = [calculate([flightA, flightB]), flightC]
-            || [calculate([flightA, flightC]), flightB]
-            || [calculate([flightB, flightC]), flightA];
+    if (legs.length > 2) {
+        const [legA, legB, ...restLegs] = legs
+        const flight = findFlight([legA, legB])
         if (flight) {
-            return calculate([flight, lastLeg]);
+            return findFlight([flight, ...restLegs]);
         }
-        return false;
+        return flight
     }
+    return []
 }
+
+exports.calculateFlight = calculateFlight;
