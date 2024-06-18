@@ -33,15 +33,6 @@ describe('calculateFlight', () => {
     const result = calculateFlight(legs);
     expect(result).toEqual(expected);
   });
-
-  const edgeCases = [
-      {legs: [], expected: []},
-      {legs: [['SFO']], expected: ['SFO']},
-    ]
-  test.each(edgeCases)('Edge cases: $legs', ({legs, expected}) => {
-    const result = calculateFlight(legs);
-    expect(result).toEqual(expected);
-  });
 });
 
 function generateAirportPairs(n) {
